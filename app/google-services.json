@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1012426768434",
+    "project_id": "uma-plastics",
+    "storage_bucket": "uma-plastics.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1012426768434:android:5bc4342c65f903135b7c2b",
+        "android_client_info": {
+          "package_name": "com.umaplasticsfsm"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBJSZ_t_qXptwnbI3mDdIXVA_bkPfmO-qc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
