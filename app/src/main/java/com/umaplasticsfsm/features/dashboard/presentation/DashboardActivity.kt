@@ -1988,7 +1988,8 @@ class DashboardActivity : BaseActivity(), View.OnClickListener, BaseNavigation, 
         Timber.d("DashActi registerReceiver gpsReceiver")
         registerReceiver(gpsReceiver, networkIntentFilter);
 
-        registerReceiver(broadcastReceiver, filter)
+        //registerReceiver(broadcastReceiver, filter)
+        mContext.registerReceiver(broadcastReceiver, filter, Context.RECEIVER_EXPORTED)
         //registerReceiver(geoFenceBroadcast, IntentFilter())
         //checkToShowAddAttendanceAlert()
 

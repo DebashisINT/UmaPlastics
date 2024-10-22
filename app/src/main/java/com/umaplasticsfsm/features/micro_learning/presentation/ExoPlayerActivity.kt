@@ -60,7 +60,7 @@ class ExoPlayerActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         requestWindowFeature(Window.FEATURE_NO_TITLE)
         window.setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN)
-        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
 
         setContentView(R.layout.activity_exoplayer)
 
@@ -92,11 +92,13 @@ class ExoPlayerActivity : AppCompatActivity() {
 
     @SuppressLint("SourceLockedOrientationActivity")
     private fun initializePlayer() {
-        simpleExoPlayer = ExoPlayerFactory.newSimpleInstance(this)
+        //simpleExoPlayer = ExoPlayerFactory.newSimpleInstance(this)
+        simpleExoPlayer =  SimpleExoPlayer.Builder(this).build()
 
         mediaDataSourceFactory = DefaultDataSourceFactory(this, Util.getUserAgent(this, "mediaPlayerSample"))
 
-        val mediaSource = ProgressiveMediaSource.Factory(mediaDataSourceFactory).createMediaSource(Uri.parse(mMicroLearning?.url))
+        //val mediaSource = ProgressiveMediaSource.Factory(mediaDataSourceFactory).createMediaSource(Uri.parse(mMicroLearning?.url))
+        val mediaSource = ProgressiveMediaSource.Factory(mediaDataSourceFactory).createMediaSource(MediaItem.fromUri(Uri.parse(mMicroLearning?.url)))
 
         simpleExoPlayer.playWhenReady = mMicroLearning?.play_when_ready!!
         simpleExoPlayer.seekTo(mMicroLearning?.current_window?.toInt()!!, mMicroLearning?.play_back_position?.toLong()!!)
@@ -119,18 +121,18 @@ class ExoPlayerActivity : AppCompatActivity() {
             }
         }*/
 
-        simpleExoPlayer.addListener( object : Player.EventListener{
-            override fun onPlaybackParametersChanged(playbackParameters: PlaybackParameters?) {
-            }
+        /*        simpleExoPlayer.addListener( object : Player.EventListener{
+                    override fun onPlaybackParametersChanged(playbackParameters: PlaybackParameters?) {
+                    }
 
-            override fun onTracksChanged(trackGroups: TrackGroupArray?, trackSelections: TrackSelectionArray?) {
-            }
+                    override fun onTracksChanged(trackGroups: TrackGroupArray?, trackSelections: TrackSelectionArray?) {
+                    }
 
-            override fun onPlayerError(error: ExoPlaybackException?) {
-                error?.printStackTrace()
-            }
+                    override fun onPlayerError(error: ExoPlaybackException?) {
+                        error?.printStackTrace()
+                    }
 
-            /** 4 playbackState exists */
+                    *//** 4 playbackState exists *//*
             override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
                 when(playbackState){
                     STATE_BUFFERING -> {
@@ -156,6 +158,27 @@ class ExoPlayerActivity : AppCompatActivity() {
             }
 
             override fun onTimelineChanged(timeline: Timeline?, manifest: Any?, reason: Int) {
+            }
+        })*/
+
+        simpleExoPlayer.addListener(object : Listener {
+            override fun onPlaybackStateChanged(@State state: Int) {
+                when(state){
+                    STATE_BUFFERING -> {
+                        progress_wheel.spin()
+                    }
+                    STATE_READY -> {
+                        progress_wheel.stopSpinning()
+                    }
+                    STATE_IDLE -> {
+                    }
+                    STATE_ENDED -> {
+                    }
+                }
+            }
+
+            override fun onPlayerError(error: PlaybackException) {
+                error?.printStackTrace()
             }
         })
 
@@ -221,37 +244,37 @@ class ExoPlayerActivity : AppCompatActivity() {
         progress_wheel.spin()
         val repository = MicroLearningRepoProvider.microLearningRepoProvider()
         BaseActivity.compositeDisposable.add(
-                repository.updateVideoPosition(mMicroLearning?.id!!, mMicroLearning?.current_window!!, mMicroLearning?.play_back_position!!,
-                        mMicroLearning?.play_when_ready!!, percentage)
-                        .observeOn(AndroidSchedulers.mainThread())
-                        .subscribeOn(Schedulers.io())
-                        .subscribe({ result ->
-                            val response = result as BaseResponse
+            repository.updateVideoPosition(mMicroLearning?.id!!, mMicroLearning?.current_window!!, mMicroLearning?.play_back_position!!,
+                mMicroLearning?.play_when_ready!!, percentage)
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeOn(Schedulers.io())
+                .subscribe({ result ->
+                    val response = result as BaseResponse
 //                            XLog.d("UPDATE VIDEO POSITION: " + "RESPONSE : " + response.status + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ",MESSAGE : " + response.message)
-                            Timber.d("UPDATE VIDEO POSITION: " + "RESPONSE : " + response.status + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ",MESSAGE : " + response.message)
-                            progress_wheel.stopSpinning()
-                            //Toaster.msgShort(this, response.message!!)
+                    Timber.d("UPDATE VIDEO POSITION: " + "RESPONSE : " + response.status + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ",MESSAGE : " + response.message)
+                    progress_wheel.stopSpinning()
+                    //Toaster.msgShort(this, response.message!!)
 
-                            if (response.status == NetworkConstant.SUCCESS) {
-                                Handler().postDelayed(Runnable {
-                                    setResult(Activity.RESULT_OK, Intent())
-                                    finish()
-                                }, 500)
-                            }
-                            else {
-                                isOnBackPressed = false
-                                Toaster.msgShort(this, response.message!!)
-                            }
+                    if (response.status == NetworkConstant.SUCCESS) {
+                        Handler().postDelayed(Runnable {
+                            setResult(Activity.RESULT_OK, Intent())
+                            finish()
+                        }, 500)
+                    }
+                    else {
+                        isOnBackPressed = false
+                        Toaster.msgShort(this, response.message!!)
+                    }
 
-                        }, { error ->
-                            progress_wheel.stopSpinning()
-                            isOnBackPressed = false
+                }, { error ->
+                    progress_wheel.stopSpinning()
+                    isOnBackPressed = false
 //                            XLog.d("UPDATE VIDEO POSITION: " + "ERROR : " + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ",MESSAGE : " + error.localizedMessage)
-                            Timber.d("UPDATE VIDEO POSITION: " + "ERROR : " + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ",MESSAGE : " + error.localizedMessage)
+                    Timber.d("UPDATE VIDEO POSITION: " + "ERROR : " + "\n" + "Time : " + AppUtils.getCurrentDateTime() + ", USER :" + Pref.user_name + ",MESSAGE : " + error.localizedMessage)
 
-                            error.printStackTrace()
-                            Toaster.msgShort(this, getString(R.string.something_went_wrong))
-                        })
+                    error.printStackTrace()
+                    Toaster.msgShort(this, getString(R.string.something_went_wrong))
+                })
         )
     }
 }
